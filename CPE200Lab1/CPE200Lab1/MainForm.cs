@@ -62,6 +62,7 @@ namespace CPE200Lab1
                     break;
                 case "%":
                     //your code here
+                    //tum  mai dai
                     break;
             }
             return "E";
