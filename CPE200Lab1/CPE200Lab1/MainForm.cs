@@ -18,65 +18,48 @@ namespace CPE200Lab1
         private bool isAfterEqual;
         private string firstOperand;
         private string operate;
+        
+        private int way = 0;
+        private string secondoperator = "";
+        private int check_start = 1;        
+        
+
+        private calculatorengine engine;
+
+
+
 
         private void resetAll()
         {
+            way = 0;
+            check_start = 1;
+            firstOperand = "0";
+            secondoperator = "";
+
             lblDisplay.Text = "0";
             isAllowBack = true;
             hasDot = false;
             isAfterOperater = false;
             isAfterEqual = false;
-        }
-
-        private string calculate(string operate, string firstOperand, string secondOperand, int maxOutputSize = 8)
-        {
-            switch(operate)
-            {
-                case "+":
-                    return (Convert.ToDouble(firstOperand) + Convert.ToDouble(secondOperand)).ToString();
-                case "-":
-                    return (Convert.ToDouble(firstOperand) - Convert.ToDouble(secondOperand)).ToString();
-                case "X":
-                    return (Convert.ToDouble(firstOperand) * Convert.ToDouble(secondOperand)).ToString();
-                case "÷":
-                    // Not allow devide be zero
-                    if(secondOperand != "0")
-                    {
-                        double result;
-                        string[] parts;
-                        int remainLength;
-
-                        result = (Convert.ToDouble(firstOperand) / Convert.ToDouble(secondOperand));
-                        // split between integer part and fractional part
-                        parts = result.ToString().Split('.');
-                        // if integer part length is already break max output, return error
-                        if(parts[0].Length > maxOutputSize)
-                        {
-                            return "E";
-                        }
-                        // calculate remaining space for fractional part.
-                        remainLength = maxOutputSize - parts[0].Length - 1;
-                        // trim the fractional part gracefully. =
-                        return result.ToString("N" + remainLength);
-                    }
-                    break;
-                case "%":
-                    //your code here
-                    //tum  mai dai
-                    break;
-            }
-            return "E";
+            
         }
 
         public MainForm()
         {
             InitializeComponent();
-
+            engine = new calculatorengine();
             resetAll();
         }
 
         private void btnNumber_Click(object sender, EventArgs e)
         {
+            if (way == 1)
+            {
+                way = 0;
+                secondoperator = operate;
+                check_start = 2;
+            }
+            
             if (lblDisplay.Text is "Error")
             {
                 return;
@@ -93,6 +76,7 @@ namespace CPE200Lab1
             {
                 return;
             }
+            
             isAllowBack = true;
             string digit = ((Button)sender).Text;
             if(lblDisplay.Text is "0")
@@ -101,10 +85,13 @@ namespace CPE200Lab1
             }
             lblDisplay.Text += digit;
             isAfterOperater = false;
-        }
 
+            
+        }
         private void btnOperator_Click(object sender, EventArgs e)
         {
+            way = 1;
+            string secondOperand;
             if (lblDisplay.Text is "Error")
             {
                 return;
@@ -113,22 +100,110 @@ namespace CPE200Lab1
             {
                 return;
             }
+
+            if (check_start == 2)
+            {
+                if (lblDisplay.Text is "Error")
+                {
+                    return;
+                }
+
+                secondOperand = lblDisplay.Text;
+                string result = engine.calculate(secondoperator, firstOperand, secondOperand);
+                if (result is "E" || result.Length > 8)
+                        {
+                    lblDisplay.Text = "Error";
+                }
+                        else
+                        {
+                    lblDisplay.Text = result;
+                    firstOperand = result;
+                }
+                check_start = 1;
+                isAfterEqual = true;
+            }
+            else
+            {
+                isAfterOperater = true;
+                firstOperand = lblDisplay.Text;
+
+            }
             operate = ((Button)sender).Text;
-            switch (operate)
+
+            isAllowBack = false;
+
+        }
+
+        /*private void btnOperator_Click(object sender, EventArgs e)
+        {
+            way = 1;
+            /*if (pass_operator)
+            {
+                operate = ((Button)sender).Text;
+                return;
+            }
+            if (lblDisplay.Text is "Error")
+            {
+                return;
+            }
+            if (isAfterOperater)
+            {
+                //operate = ((Button)sender).Text;
+                return;
+            }
+
+            if (check_start == 2)
+            {
+                if (lblDisplay.Text is "Error")
+                {
+                    return;
+                }
+
+                string secondOperand = lblDisplay.Text;
+                string result = engine.calculate(secondoperator, firstOperand, secondOperand);
+                if (result is "E" || result.Length > 8)
+                {
+                    lblDisplay.Text = "Error";
+                }
+                else
+                {
+                    lblDisplay.Text = result;
+                    firstOperand = result;
+                    
+                }
+                check_start = 1;
+                isAfterEqual = true;
+            }
+            else
+            {
+                isAfterOperater = true;
+                firstOperand = lblDisplay.Text;
+            }
+
+            operate = ((Button)sender).Text;
+            /*switch (operate)
             {
                 case "+":
                 case "-":
                 case "X":
+        
                 case "÷":
                     firstOperand = lblDisplay.Text;
                     isAfterOperater = true;
                     break;
+                
                 case "%":
                     // your code here
+                    firstOperand = lblDisplay.Text;
+                    isAfterOperater = true;
                     break;
+                
+
             }
             isAllowBack = false;
-        }
+            //pass_operator = true;
+            
+        }*/
 
         private void btnEqual_Click(object sender, EventArgs e)
         {
@@ -136,8 +211,9 @@ namespace CPE200Lab1
             {
                 return;
             }
+            
             string secondOperand = lblDisplay.Text;
-            string result = calculate(operate, firstOperand, secondOperand);
+            string result = engine.calculate(operate, firstOperand, secondOperand);
             if (result is "E" || result.Length > 8)
             {
                 lblDisplay.Text = "Error";
@@ -145,9 +221,13 @@ namespace CPE200Lab1
             else
             {
                 lblDisplay.Text = result;
+                firstOperand = result;
+                check_start = 1;
             }
             isAfterEqual = true;
         }
+
+        
 
         private void btnDot_Click(object sender, EventArgs e)
         {
@@ -227,6 +307,49 @@ namespace CPE200Lab1
                     lblDisplay.Text = "0";
                 }
             }
+        }
+
+        private void btnonestep(object sender, EventArgs e)
+        {
+            string operate_onestep =((Button)sender).Text;
+            string firstoperate = lblDisplay.Text;
+            string ans;
+
+
+
+            switch (operate_onestep)
+            {
+                case "√":
+                    ans = (Math.Sqrt(Convert.ToDouble(firstoperate))).ToString();
+                    if (ans.Length > 8)
+                    {
+                        
+                        lblDisplay.Text = ans.Substring(0, 8);
+                    }
+                    else
+                    {
+                        lblDisplay.Text = ans;
+                    }
+                    break;
+                case "1/x":
+                    ans = (1.0 / Convert.ToDouble(firstoperate)).ToString();
+                    if (ans.Length > 8)
+                    {
+
+                        lblDisplay.Text = ans.Substring(0, 8);
+                    }
+                    else
+                    {
+                        lblDisplay.Text = ans;
+                    }
+                    break;
+
+            }
+        }
+
+        private void M_click(object sender, EventArgs e)
+        {
+
         }
     }
 }
